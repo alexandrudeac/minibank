@@ -1,0 +1,28 @@
+name: minibank
+
+services:
+  db:
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: minibank
+    ports:
+      - target: 5432
+        published: 5432
+    volumes:
+      - target: /var/lib/postgresql/data
+        source: pg_date
+        type: volume
+  db-mig:
+    image: migrate/migrate
+    entrypoint: 'migrate -path /db/migration -database "postgres://root:secret@db:5432/minibank?sslmode=disable" -verbose'
+    depends_on:
+      - db
+    volumes:
+      - target: /db/migration
+        source: ${PWD}/db/migration
+        type: bind
+        read_only: true
+volumes:
+  pg_date: { }
