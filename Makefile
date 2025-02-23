@@ -1,3 +1,5 @@
+DB_URL=postgresql://root:secret@localhost:5432/minibank?sslmode=disable
+
 migrateup:
 	migrate -path db/migration -database "$(DB_URL)" -verbose up
 

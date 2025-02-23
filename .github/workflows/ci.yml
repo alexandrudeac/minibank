@@ -15,12 +15,12 @@ jobs:
       - id: checkout
         name: Checkout Source Code
         uses: actions/checkout@v4
-      - id: go-install
+      - id: install-go
         name: Install Go
         uses: actions/setup-go@v5
         with:
           go-version: ^1.24.0
-      - id: go-migrate-install
+      - id: install-go-migrate
         name: Install Go Migrate
         run: |
           curl -L https://github.com/golang-migrate/migrate/releases/download/v4.18.2/migrate.linux-amd64.tar.gz | tar xvz
@@ -29,6 +29,9 @@ jobs:
       - id: make-migrate
         name: Run DB Migrations
         run: make migrateup
+      - id: install-go-sqlc
+        name: Install SQLc
+        run: go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
       - id: make-sqlc
         name: Run SQLc code generation
         run: make sqlc
