@@ -1,0 +1,53 @@
+name: Minibank CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - id: checkout
+        name: Checkout Source Code
+        uses: actions/checkout@v4
+      - id: go-install
+        name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ^1.24.0
+      - id: go-migrate-install
+        name: Install Go Migrate
+        run: |
+          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.18.2/migrate.linux-amd64.tar.gz | tar xvz
+          sudo mv migrate /usr/bin/migrate
+          which migrate
+      - id: make-migrate
+        name: Run DB Migrations
+        run: make migrateup
+      - id: make-sqlc
+        name: Run SQLc code generation
+        run: make sqlc
+      - id: make-test
+        name: Run Unit Tests
+        run: make test
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: root
+          POSTGRES_PASSWORD: secret
+          POSTGRES_DB: minibank
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+

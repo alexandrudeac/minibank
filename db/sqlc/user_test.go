@@ -3,7 +3,7 @@ package db
 import (
 	"context"
 	"database/sql"
-	"gitlab.com/alexandrudeac/minibank/db/util"
+	"gitlab.com/alexandrudeac/minibank/util"
 	"testing"
 	"time"
 

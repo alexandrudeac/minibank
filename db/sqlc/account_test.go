@@ -3,7 +3,7 @@ package db
 import (
 	"context"
 	"github.com/stretchr/testify/require"
-	"gitlab.com/alexandrudeac/minibank/db/util"
+	"gitlab.com/alexandrudeac/minibank/util"
 	"testing"
 	"time"
 )
