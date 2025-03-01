@@ -34,7 +34,10 @@ jobs:
         run: make migrateup
       - id: install-go-sqlc
         name: Install SQLc
-        run: go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+        run: |
+          curl -sSL https://github.com/sqlc-dev/sqlc/releases/download/v1.28.0/sqlc_1.28.0_linux_amd64.tar.gz | tar -xz
+          sudo mv sqlc /usr/bin/sqlc
+          which sqlc
       - id: make-sqlc
         name: Run SQLc code generation
         run: make sqlc
