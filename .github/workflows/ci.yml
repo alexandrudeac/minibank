@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: write
+
 jobs:
   test:
     name: Test
@@ -38,6 +41,16 @@ jobs:
       - id: make-test
         name: Run Unit Tests
         run: make test
+      - id: report-coverage
+        name: Report Coverage
+        uses: vladopajic/go-test-coverage@v2
+        with:
+          profile: build/coverage/coverage.out
+          local-prefix: github.com/${{github.repository}}
+          threshold-total: 75
+          git-token: ${{ github.ref_name == 'main' && secrets.GITHUB_TOKEN || '' }}
+          git-branch: badges
+
     services:
       postgres:
         image: postgres

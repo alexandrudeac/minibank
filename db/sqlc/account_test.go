@@ -16,12 +16,61 @@ func TestCreateAccount(t *testing.T) {
 func TestGetAccount(t *testing.T) {
 	createdAcc := createRandomAccount(t)
 	gotAcc, err := testStore.GetAccount(context.Background(), createdAcc.ID)
+	requireAccountToMatch(t, err, gotAcc, createdAcc)
+}
+
+func requireAccountToMatch(t *testing.T, err error, gotAcc Account, expectedAcc Account) {
 	require.NoError(t, err)
 	require.NotEmpty(t, gotAcc)
-	require.Equal(t, createdAcc.ID, gotAcc.ID)
-	require.Equal(t, createdAcc.Balance, gotAcc.Balance)
-	require.Equal(t, createdAcc.Owner, gotAcc.Owner)
-	require.WithinDuration(t, createdAcc.CreatedAt, gotAcc.CreatedAt, 1, time.Second)
+	require.Equal(t, expectedAcc.ID, gotAcc.ID)
+	require.Equal(t, expectedAcc.Balance, gotAcc.Balance)
+	require.Equal(t, expectedAcc.Owner, gotAcc.Owner)
+	require.WithinDuration(t, expectedAcc.CreatedAt, gotAcc.CreatedAt, 1, time.Second)
+}
+
+// TestGetAccountForUpdate verifies that parallel transactions created around `GetAccountForUpdate` execute sequentially
+func TestGetAccountForUpdate(t *testing.T) {
+	createdAcc := createRandomAccount(t)
+
+	results := make(chan struct {
+		Account
+		error
+	})
+
+	n := 5
+	for i := 0; i < n; i++ {
+		go func() {
+			ctx := context.Background()
+			tx, err := db.BeginTx(ctx, nil)
+			queries := New(tx)
+			if err != nil {
+				results <- struct {
+					Account
+					error
+				}{Account{}, err}
+			}
+			acc, err := queries.GetAccountForUpdate(ctx, createdAcc.ID)
+			_, err = queries.UpdateAccount(ctx, UpdateAccountParams{ID: createdAcc.ID, Balance: int64(i)})
+			err = tx.Commit()
+			results <- struct {
+				Account
+				error
+			}{acc, err}
+		}()
+	}
+	balances := make([]int64, n)
+	expectedBalOnOf := make([]int64, n+1)
+	expectedBalOnOf[n] = createdAcc.Balance
+	for i := 0; i < n; i++ {
+		res := <-results
+		balances[i] = res.Balance
+		expectedBalOnOf[i] = int64(i)
+		res.Balance = createdAcc.Balance
+		requireAccountToMatch(t, res.error, createdAcc, res.Account)
+	}
+	for _, bal := range balances {
+		require.Contains(t, expectedBalOnOf, bal)
+	}
 }
 
 func TestUpdateAccount(t *testing.T) {

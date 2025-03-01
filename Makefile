@@ -1,3 +1,7 @@
+BUILD_DIR=./build
+COVERAGE_DIR=${BUILD_DIR}/coverage
+COVERAGE_OUT_PATH=${COVERAGE_DIR}/coverage.out
+COVERAGE_HTML_PATH=${COVERAGE_DIR}/coverage.html
 DB_URL=postgresql://root:secret@localhost:5432/minibank?sslmode=disable
 
 migrateup:
@@ -17,4 +21,4 @@ new_migration:
 sqlc:
 	sqlc generate
 test:
-	go test -v -cover -short ./...
+	mkdir -p ${COVERAGE_DIR} && go test -coverprofile=${COVERAGE_OUT_PATH}  ./... && go tool cover -html=${COVERAGE_OUT_PATH} -o ${COVERAGE_HTML_PATH}
